@@ -63,9 +63,6 @@ prepare() {
         msg "Patch source to enable writeback buffer throttling"
 	patch -Np1 -i "${srcdir}/wb-buf-throttle-v8.patch"
 
-	msg "Patch source to include the MuQSS scheduler"
-	patch -Np1 -i "${srcdir}/4.9-sched-MuQSS_150.patch"
-
     ### Clean tree and copy ARCH config over
 	msg "Running make mrproper to clean source tree"
 	make mrproper
