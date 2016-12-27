@@ -4,34 +4,6 @@
 # Tweak kernel options prior to a build via nconfig
 _makenconfig=y
 
-# Tweak kernel options prior to a build via menuconfig
-_makemenuconfig=
-
-# Tweak kernel options prior to a build via xconfig
-_makexconfig=
-
-# Tweak kernel options prior to a build via gconfig
-_makegconfig=
-
-# NUMA is optimized for multi-socket motherboards.
-# A single multi-core CPU actually runs slower with NUMA enabled.
-# See, https://bugs.archlinux.org/task/31187
-_NUMAdisable=y
-
-# Compile ONLY probed modules
-# As of mainline 2.6.32, running with this option will only build the modules
-# that you currently have probed in your system VASTLY reducing the number of
-# modules built and the build time to do it.
-#
-# WARNING - ALL modules must be probed BEFORE you begin making the pkg!
-#
-# To keep track of which modules are needed for your specific system/hardware,
-# give module_db script a try: https://aur.archlinux.org/packages/modprobed-db
-# This PKGBUILD will call it directly to probe all the modules you have logged!
-#
-# More at this wiki page ---> https://wiki.archlinux.org/index.php/Modprobed_db
-_localmodcfg=
-
 # Use the current kernel's .config file
 # Enabling this option will use the .config of the RUNNING kernel rather than
 # the ARCH defaults. Useful when the package gets updated and you already went
@@ -56,7 +28,9 @@ source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.xz"
        # "https://cdn.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.xz"
        # "https://cdn.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.sign"
         'enable_additional_cpu_optimizations_for_gcc_v4.9+_kernel_v3.15+.patch'
-        'change-default-console-loglevel.patch'
+        'wb-buf-throttle-v8.patch'
+	'4.9-sched-MuQSS_150.patch'
+	'change-default-console-loglevel.patch'
          # the main kernel config files
         'config' 'config.x86_64'
          # pacman hook for initramfs regeneration
@@ -83,7 +57,12 @@ prepare() {
         msg "Patching source with gcc patch to enable more cpus types"
 	patch -Np1 -i "${srcdir}/enable_additional_cpu_optimizations_for_gcc_v4.9+_kernel_v3.15+.patch"
 
-	
+        msg "Patch source to enable writeback buffer throttling"
+	patch -Np1 -i "${srcdir}/wb-buf-throttle-v8.patch"
+
+	msg "Patch source to include the MuQSS scheduler"
+	patch -Np1 -i "${srcdir}/4.9-sched-MuQSS_150.patch"
+
     ### Clean tree and copy ARCH config over
 	msg "Running make mrproper to clean source tree"
 	make mrproper
@@ -114,24 +93,6 @@ prepare() {
 		sed -i "s|CONFIG_LOCALVERSION_AUTO=.*|CONFIG_LOCALVERSION_AUTO=n|" ./.config
 	fi
 
-	### Optionally disable NUMA since >99% of users have mono-socket systems.
-	# For more, see: https://bugs.archlinux.org/task/31187
-	if [ -n "$_NUMAdisable" ]; then
-		if [ "${CARCH}" = "x86_64" ]; then
-			msg "Disabling NUMA from kernel config..."
-			sed -i -e 's/CONFIG_NUMA=y/# CONFIG_NUMA is not set/' \
-				-i -e '/CONFIG_AMD_NUMA=y/d' \
-				-i -e '/CONFIG_X86_64_ACPI_NUMA=y/d' \
-				-i -e '/CONFIG_NODES_SPAN_OTHER_NODES=y/d' \
-				-i -e '/# CONFIG_NUMA_EMU is not set/d' \
-				-i -e '/CONFIG_NODES_SHIFT=6/d' \
-				-i -e '/CONFIG_NEED_MULTIPLE_NODES=y/d' \
-				-i -e '/# CONFIG_MOVABLE_NODE is not set/d' \
-				-i -e '/CONFIG_USE_PERCPU_NUMA_NODE_ID=y/d' \
-				-i -e '/CONFIG_ACPI_NUMA=y/d' ./.config
-		fi
-	fi
-
 	# set extraversion to pkgrel
 	sed -ri "s|^(EXTRAVERSION =).*|\1 -${pkgrel}|" Makefile
 
@@ -142,38 +103,11 @@ prepare() {
 	msg "Running make prepare for you to enable patched options of your choosing"
 	make prepare
 
-	### Optionally load needed modules for the make localmodconfig
-	# See https://aur.archlinux.org/packages/modprobed-db
-		if [ -n "$_localmodcfg" ]; then
-		msg "If you have modprobe-db installed, running it in recall mode now"
-		if [ -e /usr/bin/modprobed-db ]; then
-			[[ ! -x /usr/bin/sudo ]] && echo "Cannot call modprobe with sudo.  Install via pacman -S sudo and configure to work with this user." && exit 1
-			sudo /usr/bin/modprobed-db recall
-		fi
-		msg "Running Steven Rostedt's make localmodconfig now"
-		make localmodconfig
-	fi
-
 	if [ -n "$_makenconfig" ]; then
 		msg "Running make nconfig"
 		make nconfig
 	fi
 	
-	if [ -n "$_makemenuconfig" ]; then
-		msg "Running make menuconfig"
-		make menuconfig
-	fi
-	
-	if [ -n "$_makexconfig" ]; then
-		msg "Running make xconfig"
-		make xconfig
-	fi
-	
-	if [ -n "$_makegconfig" ]; then
-		msg "Running make gconfig"
-		make gconfig
-	fi
-
 	# rewrite configuration
 	yes "" | make config >/dev/null
 
@@ -376,6 +310,8 @@ validpgpkeys=(
 sha512sums=('bf67ff812cc3cb7e5059e82cc5db0d9a7c5637f7ed9a42e4730c715bf7047c81ed3a571225f92a33ef0b6d65f35595bc32d773356646df2627da55e9bc7f1f1a'
             'SKIP'
             'cfb8f29a49233a32f61087bcfd92e059e9f6c7e5dc416cb2f44c1241a6ba55918b56b283f1c5054e1e12d07ed2cacc6581feed7c34128bed04fcd0d8eed60b56'
+            '4470825b23f4a40f8aad66b8c6a6910c021286a34b18424233461005649d1a733c8935770c7ac974c8ecc93151c0e592eaa49e7327f76b757da8e1ceb563abef'
+            '1325a18ce2f758ebf0aad95e29c4f2636eb952cf8306f863b1acbf74e982aecfbc82e321064c89fe19ee63938e4930662f40f55cd16284f86743effb79cef3ee'
             'd9d28e02e964704ea96645a5107f8b65cae5f4fb4f537e224e5e3d087fd296cb770c29ac76e0ce95d173bc420ea87fb8f187d616672a60a0cae618b0ef15b8c8'
             '643cad54fc54f4790e1d28dbc60f775f117fa3e25e15aff418b0406cc7a9b49db5d67fc02ff7056a951a2d64d5bbc58306c40fa0d588460664c2921ad613745c'
             '94fbb7e67b77bb8911b69cdb23bbb74317e75a4ed786e4c6486bf2927042f9374e932ea879d1b250837e42c628abf7082fd6f895a2257c5d3ad652f6a520306a'
