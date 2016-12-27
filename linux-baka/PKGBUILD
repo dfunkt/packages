@@ -28,7 +28,8 @@ source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.xz"
        # "https://cdn.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.xz"
        # "https://cdn.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.sign"
         'enable_additional_cpu_optimizations_for_gcc_v4.9+_kernel_v3.15+.patch'
-        'wb-buf-throttle-v8.patch'
+        '0001-x86-fpu-Fix-invalid-FPU-ptrace-state-after-execve.patch'
+	'wb-buf-throttle-v8.patch'
 	'4.9-sched-MuQSS_150.patch'
 	'change-default-console-loglevel.patch'
          # the main kernel config files
@@ -56,6 +57,9 @@ prepare() {
     ### Patch source to enable more gcc CPU optimizatons via the make nconfig
         msg "Patching source with gcc patch to enable more cpus types"
 	patch -Np1 -i "${srcdir}/enable_additional_cpu_optimizations_for_gcc_v4.9+_kernel_v3.15+.patch"
+
+        msg "Fix some memory corruption"
+        patch -Rp1 -i "${srcdir}/0001-x86-fpu-Fix-invalid-FPU-ptrace-state-after-execve.patch"
 
         msg "Patch source to enable writeback buffer throttling"
 	patch -Np1 -i "${srcdir}/wb-buf-throttle-v8.patch"
@@ -310,6 +314,7 @@ validpgpkeys=(
 sha512sums=('bf67ff812cc3cb7e5059e82cc5db0d9a7c5637f7ed9a42e4730c715bf7047c81ed3a571225f92a33ef0b6d65f35595bc32d773356646df2627da55e9bc7f1f1a'
             'SKIP'
             'cfb8f29a49233a32f61087bcfd92e059e9f6c7e5dc416cb2f44c1241a6ba55918b56b283f1c5054e1e12d07ed2cacc6581feed7c34128bed04fcd0d8eed60b56'
+            '002d5e0ccfa5824c1750912a6400ff722672d6587b74ba66b1127cf1228048f604bba107617cf4f4477884039af4d4d196cf1b74cefe43b0bddc82270f11940d'
             '4470825b23f4a40f8aad66b8c6a6910c021286a34b18424233461005649d1a733c8935770c7ac974c8ecc93151c0e592eaa49e7327f76b757da8e1ceb563abef'
             '1325a18ce2f758ebf0aad95e29c4f2636eb952cf8306f863b1acbf74e982aecfbc82e321064c89fe19ee63938e4930662f40f55cd16284f86743effb79cef3ee'
             'd9d28e02e964704ea96645a5107f8b65cae5f4fb4f537e224e5e3d087fd296cb770c29ac76e0ce95d173bc420ea87fb8f187d616672a60a0cae618b0ef15b8c8'
