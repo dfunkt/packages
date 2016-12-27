@@ -424,3 +424,4 @@ gcc version >=4.9
  
  # AMD Elan support
  cflags-$(CONFIG_MELAN)		+= -march=i486
+
