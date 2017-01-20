@@ -15,7 +15,7 @@ _use_current=y
 
 pkgbase=linux-baka
 _srcname=linux-4.9
-pkgver=4.9.4
+pkgver=4.9.5
 pkgrel=1
 arch=('i686' 'x86_64')
 license=('GPL2')
@@ -23,10 +23,10 @@ options=('!strip')
 makedepends=('kmod' 'inetutils' 'bc')
 _gcc_patch="enable_additional_cpu_optimizations_for_gcc_v4.9+_kernel_v3.15+.patch"
 
-source=("https://cdn.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.xz"
-        "https://cdn.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.sign"
-        "https://cdn.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.xz"
-        "https://cdn.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.sign"
+source=("https://www.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.xz"
+        "https://www.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.sign"
+        "https://www.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.xz"
+        "https://www.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.sign"
         'enable_additional_cpu_optimizations_for_gcc_v4.9+_kernel_v3.15+.patch'
 	'4.9-sched-MuQSS_150.patch'
 	'wb-buf-throttle-v8.patch'
@@ -309,7 +309,7 @@ validpgpkeys=(
 
 sha512sums=('bf67ff812cc3cb7e5059e82cc5db0d9a7c5637f7ed9a42e4730c715bf7047c81ed3a571225f92a33ef0b6d65f35595bc32d773356646df2627da55e9bc7f1f1a'
             'SKIP'
-            'd6a81ef416068a92bfa5a6a6156cfc50e9c4c44ac6343c076551376f0ce5be486147abf7aa1eed48c3f10ef5d97d3880924c56b70ff4b92faae106d994a25e48'
+            '1da3b136478103eeabcdc02fae60ba75f3ff0a07835e47a5fbf033761fcaab2400e85184083f883b3c652f031e6834533c63c9c2b46bbe09a81ed0baa1369765'
             'SKIP'
             'b6a1d23ad8a892a003e15221ab99c26313fd3829da9aa15a535f783804adb9621b604c127e1a723db81c520515b4e0eb948e6974130d2feaf111ddb6bd8ec3ca'
             '1325a18ce2f758ebf0aad95e29c4f2636eb952cf8306f863b1acbf74e982aecfbc82e321064c89fe19ee63938e4930662f40f55cd16284f86743effb79cef3ee'
